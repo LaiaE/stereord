@@ -111,7 +111,7 @@ delta.method <- function(trans.formula, coef, cov){
     assign(syms[i], coef[i])
   }
 
-  J <- sapply(trans.formula, function(form) {as.numeric(attr(eval(deriv(form, syms)), "gradient"))})
+  J <- sapply(trans.formula, function(form) {as.numeric(attr(eval(stats::deriv(form, syms)), "gradient"))})
   # R consider vectors as matrix with dimensons = 1 x length(vector)
   new.covar <- t(J) %*% cov %*% J
   sqrt(diag(new.covar))
@@ -125,8 +125,8 @@ delta.method <- function(trans.formula, coef, cov){
 #'
 #' @param formula an object of class formula with description of the model to be fitted.
 #' @param data a data frame o tibble containing the variables in the model.
-#' @param phi1.iszero logicals. If \texttt{TRUE} means $\phi_1=0$ and $\phi_q = 1$, else means $\phi_1=1$ and $\phi_q = 0$
-#' @param repar logicals. If \texttt{TRUE} means the response variable is ordinal and \\  the reparametrization to ensure the score constraint is applied.
+#' @param phi1.iszero logicals. If TRUE means $\phi_1=0$ and $\phi_q = 1$, else means $\phi_1=1$ and $\phi_q = 0$
+#' @param repar logicals. If TRUE means the response variable is ordinal and \\  the reparametrization to ensure the score constraint is applied.
 #'
 #' @return estimated coefficients
 #' @export
@@ -138,11 +138,11 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
 
   # If the data has missing values, we only keep complete cases
   if(sum(apply(data[,c(response,covariates)],2, function(x) any(is.na(x))))>0){
-    data <- data[complete.cases(data[,c(response,covariates)]),]
+    data <- data[stats::complete.cases(data[,c(response,covariates)]),]
   }
 
   # Transform the data to estimate the model: create the dummy variable if it is needed
-  matrixdata <- cbind(Y = data[,response], model.matrix(as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
+  matrixdata <- cbind(Y = data[,response], stats::model.matrix(stats::as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
   matrixdata <- matrixdata[,-which(colnames(matrixdata) == "(Intercept)")]
 
 
@@ -187,10 +187,9 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
 
     ## Construct a new model matrix and add an intercept column to it
     X <- cbind(Intercept = rep(1, n), matrixdata[,-1])
-    head(X)
 
     ## Now attempt to fit logistic regression to the binary response y1
-    fit <- glm.fit(X, y1, family = binomial())
+    fit <- stats::glm.fit(X, y1, family = stats::binomial())
     if(!fit$converged)
       stop("attempt to find suitable starting values failed")
     coefs <- fit$coefficients
@@ -234,7 +233,7 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
 
 
   # Run optim
-  est.R <- optim(par = par.start, # Initialize parameters
+  est.R <- stats::optim(par = par.start, # Initialize parameters
                  matrixdata = matrixdata, # Data matrix
                  lpar = lpar, # Parameters
                  phi1.iszero = phi1.iszero, # TRUE means phi_1=0 ; FALSE means phi_1=1
@@ -289,7 +288,7 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
 
       }
       Ind <- c("~ 1/(1+exp(-x1))", Ind)
-      L <- lapply(Ind, as.formula)
+      L <- lapply(Ind, stats::as.formula)
 
       VarCov <- solve(est.R$hessian)
       VarCov <- VarCov[(q-1)+1:(q-2), (q-1)+1:(q-2)]
