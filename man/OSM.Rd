@@ -21,9 +21,9 @@ OSM(
 
 \item{data}{a data frame o tibble containing the variables in the model.}
 
-\item{phi1.iszero}{logicals. If \texttt{TRUE} means $\phi_1=0$ and $\phi_q = 1$, else means $\phi_1=1$ and $\phi_q = 0$}
+\item{phi1.iszero}{logicals. If TRUE means $\phi_1=0$ and $\phi_q = 1$, else means $\phi_1=1$ and $\phi_q = 0$}
 
-\item{repar}{logicals. If \texttt{TRUE} means the response variable is ordinal and \\  the reparametrization to ensure the score constraint is applied.}
+\item{repar}{logicals. If TRUE means the response variable is ordinal and \\  the reparametrization to ensure the score constraint is applied.}
 }
 \value{
 estimated coefficients
