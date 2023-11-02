@@ -125,10 +125,29 @@ delta.method <- function(trans.formula, coef, cov){
 #'
 #' @param formula an object of class formula with description of the model to be fitted.
 #' @param data a data frame o tibble containing the variables in the model.
-#' @param phi1.iszero logicals. If TRUE means $\phi_1=0$ and $\phi_q = 1$, else means $\phi_1=1$ and $\phi_q = 0$
-#' @param repar logicals. If TRUE means the response variable is ordinal and \\  the reparametrization to ensure the score constraint is applied.
+#' @param phi1.iszero logicals.  If \code{TRUE} means \eqn{\phi_1=0} and \eqn{\phi_q = 1}, else means \eqn{\phi_1=1} and \eqn{\phi_q = 0}
+#' @param repar logicals.  If \code{TRUE} means the response variable is ordinal and the reparametrization to ensure the score constraint is applied.
+#' @param Approx.start.values If \code{TRUE} means that the initial values for the parameters to be optimized over are
+#' approximated, else are assumed to be 0.1.
+#' @param method The method to be used to optimize the log likelihood. By default is \code{BFGS} (quasi-Newton method).
+#' @param control a list to control some procedures in \code{optim()}.
 #'
-#' @return estimated coefficients
+#' @param HES  description  If \code{TRUE} means that the output will come back the hessian matrix.
+#' @param ... For \code{OSM()}: additional arguments to be passed to the low level regression fitting functions (see below).
+#'
+#' @return \code{OSM} returns a list containing at least the following components:
+#' \itemize{
+#' \item{alpha}{ a matrix with the estimated parameters vector $\\{ \\alpha_k \\}$ and their standard error}
+#' \item{phi}{ a matrix with the estimated parameters vector $\\{\\phi_k\\}$ and their standard error}
+#' \item{beta}{ a matrix with the estimated parameters vector $\\{\\beta_S \\}$ and their standard error}
+#' \item{logLike}{ the estimated optimal value of the menus log-likelihood }
+#' \item{AIC}{ the Akaike information criterion (AIC)}
+#' \item{BIC}{ the Bayesian information criterion (BIC) }
+#' }
+#'
+#'
+#' @importFrom stats as.formula binomial deriv glm.fit optim
+#'
 #' @export
 OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE, method = "BFGS",
                      control = list(maxit=10000, reltol=1e-15), HES = FALSE, ...){
