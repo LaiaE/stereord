@@ -160,6 +160,8 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
     data <- data[stats::complete.cases(data[,c(response,covariates)]),]
   }
 
+  if(any(class(data) != "data.frame")) data <- as.data.frame(data)
+
   # Transform the data to estimate the model: create the dummy variable if it is needed
   matrixdata <- cbind(Y = data[,response], stats::model.matrix(stats::as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
   matrixdata <- matrixdata[,-which(colnames(matrixdata) == "(Intercept)")]
