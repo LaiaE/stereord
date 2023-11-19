@@ -132,7 +132,8 @@ delta.method <- function(trans.formula, coef, cov){
 #' @param method The method to be used to optimize the log likelihood. By default is \code{BFGS} (quasi-Newton method).
 #' @param control a list to control some procedures in \code{optim()}.
 #'
-#' @param HES  description  If \code{TRUE} means that the output will come back the hessian matrix.
+#' @param HES  logicals.  If \code{TRUE} means that the output will come back the hessian matrix.
+#' @param SE  logicals.  If \code{TRUE} means that the output will contain standard errors.
 #' @param ... For \code{OSM()}: additional arguments to be passed to the low level regression fitting functions (see below).
 #'
 #' @return \code{OSM} returns a list containing at least the following components:
@@ -149,8 +150,11 @@ delta.method <- function(trans.formula, coef, cov){
 #' @importFrom stats as.formula binomial deriv glm.fit optim
 #'
 #' @export
+#'
+
+
 OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE, method = "BFGS",
-                     control = list(maxit=10000, reltol=1e-15), HES = FALSE, ...){
+                     control = list(maxit=10000, reltol=1e-15), HES = FALSE, SE = TRUE, ...){
 
   response <- all.vars(formula[[2]])
   covariates <- all.vars(formula[[3]])
@@ -163,7 +167,8 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
   if(any(class(data) != "data.frame")) data <- as.data.frame(data)
 
   # Transform the data to estimate the model: create the dummy variable if it is needed
-  matrixdata <- cbind(Y = data[,response], stats::model.matrix(stats::as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
+  # matrixdata <- cbind(Y = data[,response], stats::model.matrix(stats::as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
+  matrixdata <- cbind(Y = data[,response], stats::model.matrix(formula, data))
   matrixdata <- matrixdata[,-which(colnames(matrixdata) == "(Intercept)")]
 
 
@@ -268,71 +273,92 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
   # Extract the results
   param.est.R <- unpack.par.stereo(est.R$par, p, q, phi1.iszero)
 
-  # SE
-  SE.R <- sqrt(diag(solve(est.R$hessian)))
-  param.SE.R <- unpack.par.stereo(SE.R, p, q, phi1.iszero)
+  if(SE){
+    # SE
+    SE.R <- try(sqrt(diag(solve(est.R$hessian))),silent = TRUE)
+    if(class(SE.R) == "try-error"){
+      SE <- FALSE
+      warning("The Hessian matrix is singular which means that your parameters are linear functions of each other (or almost collinear). Therefore, the standard errors can not be computed.")
+    }
+  }
+
+  if(SE) param.SE.R <- unpack.par.stereo(SE.R, p, q, phi1.iszero)
 
   # Reverse the reparametrization and apply the Delta Method to compute the SE of the scores
   if (repar){
     param.est.R$phi_norepar <- param.est.R$phi
-    param.SE.R$SEphi_norepar <- param.SE.R$phi
+
+    if(SE) param.SE.R$SEphi_norepar <- param.SE.R$phi
 
     param.est.R$phi <- inverse.repar.param(param.est.R,phi1.iszero,q)
 
-    # Delta method
-    if(q == 3){
-      param.SE.R$phi[2] <- delta.method(trans.formula = ~ 1/(1+exp(-x1)), coef = param.est.R$phi_norepar[2] , cov = (param.SE.R$SEphi_norepar[2])^2)
-    } else {
-      Ind <- 1:(q-2)
-      Ind <- paste0("x", Ind)
-
-      if(phi1.iszero){
-        Ind <- paste0("~1/(1 + exp(-((", paste(Ind, collapse = ") + exp("), "))))")
-        if(q >= 5){
-          for(i in (q-3):2){
-            Ind_aux <- 1:i
-            Ind_aux <- paste0("x", Ind_aux)
-            Ind_aux <- paste0("~1/(1 + exp(-((", paste(Ind_aux, collapse = ") + exp("), "))))")
-            Ind <- c(Ind_aux, Ind)
-          }
-        }
+    if(SE){
+      # Delta method
+      if(q == 3){
+        param.SE.R$phi[2] <- delta.method(trans.formula = ~ 1/(1+exp(-x1)), coef = param.est.R$phi_norepar[2] , cov = (param.SE.R$SEphi_norepar[2])^2)
       } else {
-        Ind <- paste0("~1/(1 + exp(-((", paste(Ind, collapse = ") - exp("), "))))")
-        if(q >= 5){
-          for(i in (q-3):2){
-            Ind_aux <- 1:i
-            Ind_aux <- paste0("x", Ind_aux)
-            Ind_aux <- paste0("~1/(1 + exp(-((", paste(Ind_aux, collapse = ") - exp("), "))))")
-            Ind <- c(Ind_aux, Ind)
+        Ind <- 1:(q-2)
+        Ind <- paste0("x", Ind)
+
+        if(phi1.iszero){
+          Ind <- paste0("~1/(1 + exp(-((", paste(Ind, collapse = ") + exp("), "))))")
+          if(q >= 5){
+            for(i in (q-3):2){
+              Ind_aux <- 1:i
+              Ind_aux <- paste0("x", Ind_aux)
+              Ind_aux <- paste0("~1/(1 + exp(-((", paste(Ind_aux, collapse = ") + exp("), "))))")
+              Ind <- c(Ind_aux, Ind)
+            }
           }
+        } else {
+          Ind <- paste0("~1/(1 + exp(-((", paste(Ind, collapse = ") - exp("), "))))")
+          if(q >= 5){
+            for(i in (q-3):2){
+              Ind_aux <- 1:i
+              Ind_aux <- paste0("x", Ind_aux)
+              Ind_aux <- paste0("~1/(1 + exp(-((", paste(Ind_aux, collapse = ") - exp("), "))))")
+              Ind <- c(Ind_aux, Ind)
+            }
+          }
+
         }
+        Ind <- c("~ 1/(1+exp(-x1))", Ind)
+        L <- lapply(Ind, stats::as.formula)
 
+        VarCov <- solve(est.R$hessian)
+        VarCov <- VarCov[(q-1)+1:(q-2), (q-1)+1:(q-2)]
+
+        param.SE.R$phi[2:(q-1)] <- delta.method(trans.formula = L, coef = param.est.R$phi_norepar[2:(q-1)] , cov = VarCov)
       }
-      Ind <- c("~ 1/(1+exp(-x1))", Ind)
-      L <- lapply(Ind, stats::as.formula)
-
-      VarCov <- solve(est.R$hessian)
-      VarCov <- VarCov[(q-1)+1:(q-2), (q-1)+1:(q-2)]
-
-      param.SE.R$phi[2:(q-1)] <- delta.method(trans.formula = L, coef = param.est.R$phi_norepar[2:(q-1)] , cov = VarCov)
     }
+
   }
 
   deviance <- 2 * est.R$value
 
-  results.R <- list()
-  results.R$alpha <- cbind(param.est.R$alpha, param.SE.R$alpha)
-  colnames(results.R$alpha) <- c("est", "SE")
-  rownames(results.R$alpha) <- paste0("alpha",1:q)
+  if(SE){
+    results.R <- list()
+    results.R$alpha <- cbind(param.est.R$alpha, param.SE.R$alpha)
+    colnames(results.R$alpha) <- c("est", "SE")
+    rownames(results.R$alpha) <- paste0("alpha",1:q)
 
-  results.R$phi <- cbind(param.est.R$phi, param.SE.R$phi)
-  results.R$phi[q,2] <- 0
-  colnames(results.R$phi) <- c("est","SE")
-  rownames(results.R$phi) <- paste0("phi",1:q)
+    results.R$phi <- cbind(param.est.R$phi, param.SE.R$phi)
+    results.R$phi[q,2] <- 0
+    colnames(results.R$phi) <- c("est","SE")
+    rownames(results.R$phi) <- paste0("phi",1:q)
 
-  results.R$beta <- cbind(param.est.R$beta, param.SE.R$beta)
-  colnames(results.R$beta) <- c("est","SE")
-  rownames(results.R$beta) <- paste0("beta_",OUTnames)
+    results.R$beta <- cbind(param.est.R$beta, param.SE.R$beta)
+    colnames(results.R$beta) <- c("est","SE")
+    rownames(results.R$beta) <- paste0("beta_",OUTnames)
+  } else {
+    results.R <- param.est.R
+    names(results.R$alpha) <- paste0("alpha",1:q)
+
+    names(results.R$phi) <- paste0("phi",1:q)
+
+    names(results.R$beta) <- paste0("beta_",OUTnames)
+  }
+
 
   results.R$logLike <- est.R$value
 
@@ -340,10 +366,16 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
   results.R$BIC <- 2*results.R$logLike + numParam*log(lpar$n)
 
   if(repar){
-    results.R$phi.beforeRep <- cbind(param.est.R$phi_norepar, param.SE.R$SEphi_norepar)
-    results.R$phi.beforeRep[q,2] <- 0
-    colnames(results.R$phi.beforeRep) <- c("est","SE")
-    rownames(results.R$phi.beforeRep) <- paste0("phi",1:q, ".beforeRep")
+    if(SE){
+      results.R$phi.beforeRep <- cbind(param.est.R$phi_norepar, param.SE.R$SEphi_norepar)
+      results.R$phi.beforeRep[q,2] <- 0
+      colnames(results.R$phi.beforeRep) <- c("est","SE")
+      rownames(results.R$phi.beforeRep) <- paste0("phi",1:q, ".beforeRep")
+    } else {
+      names(results.R)[4] <- "phi.beforeRep"
+      names(results.R$phi.beforeRep) <- paste0("phi",1:q)
+    }
+
   }
 
 
