@@ -1,10 +1,18 @@
 Package: stereord
-Title: Tools around Ordered Stereotype Model
+Title: Regression models for ordinal variables: Ordered Stereotype Model
 Version: 0.0.0.9000
-Authors@R: 
-    person("Laia", "Egea Cortes", , "laia_e@hotmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-4002-8254"))
-Description: Set of functions to fit the OSM. 
+Authors@R: c(
+person(given = "Laia", 
+           family = "Egea Cortes", 
+           email = "laia_e@hotmail.com", 
+           role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-4002-8254")), 
+person(given = "Daniel", 
+           family = "Fernández Martínez", 
+           email = "daniel.fernandez.martinez@upc.edu", 
+           role = c("aut"),
+           comment = c(ORCID = "0000-0003-0012-2094")))
+Description: Ordered stereotype model (OSM).
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
