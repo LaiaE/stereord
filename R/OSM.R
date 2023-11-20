@@ -121,38 +121,48 @@ delta.method <- function(trans.formula, coef, cov){
 ########################## Function to fit the SM and OSM ##########################
 
 
-#' OSM() is used to fit the Ordered Stereotype Model. It can also be used to fit the Stereotype Model
+#' OSM() is used to fit the Ordered Stereotype Model. It can also be used to fit the Stereotype Model.
 #'
 #' @param formula an object of class formula with description of the model to be fitted.
 #' @param data a data frame o tibble containing the variables in the model.
-#' @param phi1.iszero logicals.  If \code{TRUE} means \eqn{\phi_1=0} and \eqn{\phi_q = 1}, else means \eqn{\phi_1=1} and \eqn{\phi_q = 0}
+#' @param phi1.iszero logicals.  If \code{TRUE} means we fixed \eqn{\phi_1=0} and \eqn{\phi_q = 1}, else \eqn{\phi_1=1} and \eqn{\phi_q = 0}
 #' @param repar logicals.  If \code{TRUE} means the response variable is ordinal and the reparametrization to ensure the score constraint is applied.
-#' @param Approx.start.values If \code{TRUE} means that the initial values for the parameters to be optimized over are
+#' @param Approx.start.values logicals.  If \code{TRUE} means that the initial values for the parameters to be optimized over are
 #' approximated, else are assumed to be 0.1.
 #' @param method The method to be used to optimize the log likelihood. By default is \code{BFGS} (quasi-Newton method).
 #' @param control a list to control some procedures in \code{optim()}.
-#'
-#' @param HES  logicals.  If \code{TRUE} means that the output will come back the hessian matrix.
-#' @param SE  logicals.  If \code{TRUE} means that the output will contain standard errors.
-#' @param ... For \code{OSM()}: additional arguments to be passed to the low level regression fitting functions (see below).
+#' @param HES  logicals.  If \code{TRUE} means that the output will include the Hessian matrix.
+#' @param SE  logicals.  If \code{TRUE} means that the output will include the standard errors of the coefficients.
+#' @param ... For \code{OSM()}: additional arguments to be passed to the low level in \code{optim()}.
 #'
 #' @return \code{OSM} returns a list containing at least the following components:
-#' \itemize{
-#' \item{alpha}{ a matrix with the estimated parameters vector $\\{ \\alpha_k \\}$ and their standard error}
-#' \item{phi}{ a matrix with the estimated parameters vector $\\{\\phi_k\\}$ and their standard error}
-#' \item{beta}{ a matrix with the estimated parameters vector $\\{\\beta_S \\}$ and their standard error}
-#' \item{logLike}{ the estimated optimal value of the menus log-likelihood }
-#' \item{AIC}{ the Akaike information criterion (AIC)}
-#' \item{BIC}{ the Bayesian information criterion (BIC) }
-#' }
+#'
+#'  \code{alpha}:  Matrix with the estimated parameters vector $\\{ \\alpha_k \\}$ and their standard error if \code{SE = TRUE}.
+#'
+#'  \code{phi}: Matrix with the estimated parameters vector $\\{\\phi_k\\}$ and their standard error if \code{SE = TRUE}.
+#'
+#'  \code{beta}: Matrix with the estimated parameters vector $\\{\\beta_S \\}$ and their standard error if \code{SE = TRUE}.
+#'
+#'  \code{logLike}: Estimated optimal value of the menus log-likelihood.
+#'
+#'  \code{AIC}, \code{BIC}: the calculed values of Akaike information criterion (AIC) and Bayesian information criterion (BIC)
+#'
+#'  There are some optional outputs:
+#'
+#'  \code{phi.beforeRep}: If \code{repar = TRUE}. Matrix with the estimated parameters vector $\\{\\phi_k\\}$ before to invert reparametrization.
+#'
+#'  \code{hessian}: If \code{HES = TRUE}. Hessian Matrix.
+#'
+#' @references
+#' Fernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. *Computational Statistics & Data Analysis*, 93, 46-75.
+#' Anderson, J. A. (1984). Regression and ordered categorical variables. *Journal of the Royal Statistical Society: Series B (Methodological)*, 46(1), 1-22.
+#' Agresti, A. (2010). *Analysis of ordinal categorical data* (Vol. 656). John Wiley & Sons.
 #'
 #'
-#' @importFrom stats as.formula binomial deriv glm.fit optim
+#' @importFrom stats binomial deriv glm.fit optim
 #'
 #' @export
 #'
-
-
 OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE, method = "BFGS",
                      control = list(maxit=10000, reltol=1e-15), HES = FALSE, SE = TRUE, ...){
 
@@ -164,7 +174,9 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
     data <- data[stats::complete.cases(data[,c(response,covariates)]),]
   }
 
-  if(any(class(data) != "data.frame")) data <- as.data.frame(data)
+
+
+  if(any(inherits(data,'data.frame'))) data <- as.data.frame(data)
 
   # Transform the data to estimate the model: create the dummy variable if it is needed
   # matrixdata <- cbind(Y = data[,response], stats::model.matrix(stats::as.formula(paste0("~ ",paste(covariates, collapse = " + "))), data))
@@ -276,7 +288,7 @@ OSM <- function(formula, data,  phi1.iszero, repar, Approx.start.values = FALSE,
   if(SE){
     # SE
     SE.R <- try(sqrt(diag(solve(est.R$hessian))),silent = TRUE)
-    if(class(SE.R) == "try-error"){
+    if(inherits(SE.R,'try-error')){
       SE <- FALSE
       warning("The Hessian matrix is singular which means that your parameters are linear functions of each other (or almost collinear). Therefore, the standard errors can not be computed.")
     }
