@@ -135,6 +135,10 @@
 #'
 #'   \code{deviance} the residual deviance.
 #'
+#'   \code{aic} Akaike Information Criterion (AIC)
+#'
+#'   \code{bic} Bayesian information criterion (BIC)
+#'
 #'   \code{groups} covaraites group composition.
 #'
 #'   \code{newgrouping} grouping vector adapted to the expanded set of dummy variables.
@@ -172,10 +176,9 @@
 #'
 #'   \code{xlevels} factor levels from any categorical predictors
 #'
-#' @references
-#' Fernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. *Computational Statistics & Data Analysis*, 93, 46-75.
-#' Anderson, J. A. (1984). Regression and ordered categorical variables. *Journal of the Royal Statistical Society: Series B (Methodological)*, 46(1), 1-22.
-#' Agresti, A. (2010). *Analysis of ordinal categorical data* (Vol. 656). John Wiley & Sons.
+#' @referencesFernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. *Computational Statistics & Data Analysis*, 93, 46-75.
+#' @referencesAnderson, J. A. (1984). Regression and ordered categorical variables. *Journal of the Royal Statistical Society: Series B (Methodological)*, 46(1), 1-22.
+#' @referencesAgresti, A. (2010). *Analysis of ordinal categorical data* (Vol. 656). John Wiley & Sons.
 #'
 #' @seealso [MASS::polr()] and [clustord::osm()]
 #'
@@ -332,6 +335,9 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
   phi <- ans$phi
   res <- ans$res
   deviance <- ans$deviance
+  edf <- num_beta + qminus + (qminus-1)*H
+  aic <- deviance + 2*edf
+  bic <- deviance + edf*log(sum(ans$wt))
   u <- ans$u
 
   ## Calculate the fitted values of each observation, which are the probabilities
@@ -353,10 +359,10 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
 
   ## Construct the output object
   fit <- list(beta = beta, mu = mu, phi = phi, u = u, deviance = deviance,
-              groups = groups, newgrouping = newgrouping,
+              aic = aic, bic = bic, groups = groups, newgrouping = newgrouping,
               fitted.values = fitted, lev = lev, terms = Terms,
               df.residual = sum(wt) - num_beta - qminus - (qminus-1),
-              edf = num_beta + qminus + (qminus-1), n = sum(wt),
+              edf = edf, n = sum(wt),
               nobs = sum(wt), call = match.call(),
               convergence = res$convergence, niter = niter, eta = eta)
 
@@ -466,8 +472,8 @@ print.posm <- function(x, ...)
   cat("\nGrouping:\n")
   print(x$groups)
   cat("\nResidual Deviance:", format(x$deviance, nsmall=2L), "\n")
-  cat("AIC:", format(x$deviance + 2*x$edf, nsmall=2L), "\n")
-  cat("BIC:", format(x$deviance + x$edf*log(x$n), nsmall=2L), "\n")
+  cat("AIC:", format(x$aic, nsmall=2L), "\n")
+  cat("BIC:", format(x$bic, nsmall=2L), "\n")
   if(nzchar(mess <- naprint(x$na.action))) cat("(", mess, ")\n", sep="")
   if(x$convergence > 0)
     cat("Warning: did not converge as iteration limit reached\n")
