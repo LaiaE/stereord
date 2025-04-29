@@ -27,7 +27,6 @@
 #' @param maxSteps the maximum number of steps allowed during the model selection process.
 #'
 #' @export
-#' (Outcome, Covariates, data, maxSteps = 100, NominalVarSameGroup = FALSE)
 forward.backward.stepwise.POSM <- function(Outcome,
                                            Covariates,
                                            data,
