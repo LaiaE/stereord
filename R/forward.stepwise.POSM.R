@@ -139,7 +139,7 @@ forward.stepwise.POSM <- function(Outcome,
     }
   }
 
-  OUT <- paste0(formula_aux, " (SetCov: ", paste(SetCov_aux, collapse = ", "), "; AIC: ",
+  OUT <- paste0(formula_aux, " (SetCov: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
     round(MinimumAIC, 3),") Time: ", round(difftime(time1 = Sys.time(),time2 = start_time,units = "secs"), 3)," secs")
   } else {
 
@@ -236,7 +236,7 @@ forward.stepwise.POSM <- function(Outcome,
       }
     }
 
-    OUT <- paste0(formula_aux, " (SetCov: ", paste(SetCov_aux, collapse = ", "), "; BIC: ", round(MinimumBIC, 3), ") Time: ",
+    OUT <- paste0(formula_aux, " (SetCov: ", paste(grouping_aux, collapse = ", "), "; BIC: ", round(MinimumBIC, 3), ") Time: ",
       round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3)," secs")
   }
   if (keep)

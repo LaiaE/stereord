@@ -109,7 +109,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
       Posible.cov_rem <- combn(Model.Vars, m = (length(Model.Vars)-1))
       if(add){Posible.cov_rem <- Posible.cov_rem[,apply(Posible.cov_rem, 2, function(x) any(x == Chosen.Variable))]}
 
-      Posible.SetCov_rem <- apply(Posible.cov_rem, 2, function(x) SetCov_aux[which(Model.Vars %in% x)])
+      Posible.SetCov_rem <- apply(Posible.cov_rem, 2, function(x) grouping_aux[which(Model.Vars %in% x)])
 
       # Asses if there is some SetCov not addecuated (Not start by 1 and have all the numbers)
       ind <- apply(Posible.SetCov_rem, 2, function(l){l <- unique(as.numeric(l)); !identical(l, as.numeric(1:max(l)))})
@@ -162,7 +162,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
         Posible.cov_rem <- combn(Model.Vars, m = (length(Model.Vars)-1))
         if(add){Posible.cov_rem <- Posible.cov_rem[,apply(Posible.cov_rem, 2, function(x) any(x == Chosen.Variable))]}
 
-        Posible.SetCov_rem <- apply(Posible.cov_rem, 2, function(x) SetCov_aux[which(Model.Vars %in% x)])
+        Posible.SetCov_rem <- apply(Posible.cov_rem, 2, function(x) grouping_aux[which(Model.Vars %in% x)])
 
         # Asses if there is some SetCov not addecuated (Not start by 1 and have all the numbers)
         ind <- apply(Posible.SetCov_rem, 2, function(l){l <- unique(as.numeric(l)); !identical(l, as.numeric(1:max(l)))})
@@ -186,7 +186,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
                                                  round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3), " secs"))
           MinimumAIC <- min(AIC_aux_rem, na.rm = TRUE)
           ind2 <- which(AIC_aux_rem == MinimumAIC)
-          SetCov_aux <- Posible.SetCov_rem[,ind2]
+          grouping_aux <- Posible.SetCov_rem[,ind2]
           Model.Vars <- Posible.cov_rem[,ind2]
           formula_minAIC <- paste0(formula_aux, paste0(Model.Vars, collapse = " + "))
         }
@@ -200,7 +200,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
       ind1 <- which(sapply(AIC_aux, function(x) any(x == MinimumAIC, na.rm = TRUE)))
 
       if(names(ind1) == "ADD"){
-        SetCov_aux <- Posible.SetCov[[ind1]]
+        grouping_aux <- Posible.grouping[[ind1]]
 
         Chosen.Variable <- names(which.min(AIC_aux[[ind1]]))
         Model.Vars <- c(Model.Vars, Chosen.Variable)
@@ -210,7 +210,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
       } else {
         ind2 <- which(AIC_aux[[ind1]] == MinimumAIC)
-        SetCov_aux <- Posible.SetCov_rem[,ind2]
+        grouping_aux <- Posible.SetCov_rem[,ind2]
         Model.Vars <- Posible.cov_rem[,ind2]
         add <- FALSE
 
@@ -223,7 +223,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
   }
 
   end_time <- Sys.time()
-  OUT <- paste0(formula_minAIC, " (SetCov: ", paste(SetCov_aux, collapse = ", "),
+  OUT <- paste0(formula_minAIC, " (SetCov: ", paste(grouping_aux, collapse = ", "),
                 "; AIC: ", round(as.numeric(MinimumAIC),3), ") Time: ", difftime(time1 = end_time, time2 = start_time, units = "secs"), " secs")
   if (keep) OUT <- c(history, OUT)
   if (keep) names(OUT) <- paste("Step", seq_len(length(OUT)), ":")
