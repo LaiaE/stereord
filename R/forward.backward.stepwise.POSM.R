@@ -84,7 +84,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
   grouping_aux <- 1
   if (keep)
     history <- paste0(
-      formula_aux, " (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ", round(MinimumAIC, 3), ") Time: ",
+      formula_minAIC, " (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ", round(MinimumAIC, 3), ") Time: ",
       round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3)," secs"
     )
 
@@ -98,7 +98,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
     AIC_aux <- lapply(Posible.grouping, function(SC) {
       sapply(Covariates, function(var)
-        as.numeric(try(posm(formula = as.formula(paste0(formula_aux, "+", var)),
+        as.numeric(try(posm(formula = as.formula(paste0(formula_minAIC, "+", var)),
           data = data, grouping = SC)$aic, silent = TRUE))
         )
     })
