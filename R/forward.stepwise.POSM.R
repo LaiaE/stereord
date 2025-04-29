@@ -25,12 +25,8 @@
 #' @param keep logical for whether to keep a record of all selection steps.
 #'
 #' @export
-forward.stepwise.POSM <- function(Outcome,
-                                Covariates,
-                                data,
-                                IC = "AIC",
-                                NominalVarSameGroup = FALSE,
-                                keep = FALSE) {
+forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
+                                  NominalVarSameGroup = FALSE, keep = FALSE) {
   start_time <- Sys.time()
 
   if (any(!(Covariates %in% names(data))))
