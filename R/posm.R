@@ -176,9 +176,9 @@
 #'
 #'   \code{xlevels} factor levels from any categorical predictors
 #'
-#' @referencesFernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. *Computational Statistics & Data Analysis*, 93, 46-75.
-#' @referencesAnderson, J. A. (1984). Regression and ordered categorical variables. *Journal of the Royal Statistical Society: Series B (Methodological)*, 46(1), 1-22.
-#' @referencesAgresti, A. (2010). *Analysis of ordinal categorical data* (Vol. 656). John Wiley & Sons.
+#' @references Fernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. *Computational Statistics & Data Analysis*, 93, 46-75.
+#' @references Anderson, J. A. (1984). Regression and ordered categorical variables. *Journal of the Royal Statistical Society: Series B (Methodological)*, 46(1), 1-22.
+#' @references Agresti, A. (2010). *Analysis of ordinal categorical data* (Vol. 656). John Wiley & Sons.
 #'
 #' @seealso [MASS::polr()] and [clustord::osm()]
 #'
