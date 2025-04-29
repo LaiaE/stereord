@@ -164,9 +164,9 @@ coefficients of the covariates, the second part is starting values for the mu
 values (per-category intercepts), and the third part is starting values for
 the raw parameters used to construct the phi values.
 
-The length of the vector is \link{number of covariate terms} + \link[=number of
-categories in response variable - 1]{number of categories in response variable - 1} + Hx\link[=number of categories in response
-variable - 2]{number of categories in response variable - 2}. Every one of the values can take any real value.
+The length of the vector is (number of covariate terms) + (number of
+categories in response variable - 1) + Hx(number of categories in response
+variable - 2). Every one of the values can take any real value.
 
 The second part is the starting values for the mu_k per-category intercept
 parameters, and since mu_1 is fixed at 0 for identifiability, the number of
