@@ -70,6 +70,10 @@ different set (unrestricted to be ordered).
 
 \code{deviance} the residual deviance.
 
+\code{aic} Akaike Information Criterion (AIC)
+
+\code{bic} Bayesian information criterion (BIC)
+
 \code{groups} covaraites group composition.
 
 \code{newgrouping} grouping vector adapted to the expanded set of dummy variables.
@@ -195,11 +199,6 @@ details.
 
 #' A copy of the GNU General Public License is available at
 http://www.r-project.org/Licenses/
-}
-\references{
-Fernandez, D., Arnold, R., & Pledger, S. (2016). Mixture-based clustering for the ordered stereotype model. \emph{Computational Statistics & Data Analysis}, 93, 46-75.
-Anderson, J. A. (1984). Regression and ordered categorical variables. \emph{Journal of the Royal Statistical Society: Series B (Methodological)}, 46(1), 1-22.
-Agresti, A. (2010). \emph{Analysis of ordinal categorical data} (Vol. 656). John Wiley & Sons.
 }
 \seealso{
 \code{\link[MASS:polr]{MASS::polr()}} and \code{\link[clustord:osm]{clustord::osm()}}
