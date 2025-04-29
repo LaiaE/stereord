@@ -123,8 +123,8 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
 
       AIC_aux_rem <- sapply(1:ncol(Posible.cov_rem), function(i){
-        as.numeric(try(POSM_Laia(as.formula(paste0(formula_aux,  paste(Posible.cov_rem[,i], collapse = " + "))),
-                                 data = data, phi1.iszero = TRUE, repar = TRUE, SetCov = Posible.SetCov_rem[,i])$AIC, silent = TRUE))
+        as.numeric(try(posm(as.formula(paste0(formula_aux,  paste(Posible.cov_rem[,i], collapse = " + "))),
+                                 data = data, grouping = Posible.SetCov_rem[,i])$aic, silent = TRUE))
       })
 
 
@@ -176,8 +176,8 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
 
         AIC_aux_rem <- sapply(1:ncol(Posible.cov_rem), function(i){
-          as.numeric(try(POSM_Laia(as.formula(paste0(formula_aux,  paste(Posible.cov_rem[,i], collapse = " + "))),
-                                   data = data, phi1.iszero = TRUE, repar = TRUE, SetCov = Posible.SetCov_rem[,i])$AIC, silent = TRUE))
+          as.numeric(try(posm(as.formula(paste0(formula_aux,  paste(Posible.cov_rem[,i], collapse = " + "))),
+                                   data = data, grouping = Posible.SetCov_rem[,i])$aic, silent = TRUE))
         })
 
         if(any(AIC_aux_rem < MinimumAIC, na.rm = TRUE)){
