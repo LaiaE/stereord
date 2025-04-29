@@ -260,7 +260,6 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
     newgrouping[grep(i, colnames(x))] <- grouping[i]
   }
 
-
   # newgrouping <- as.numeric(factor(newgrouping))
   if(!is.numeric(newgrouping)) stop("grouping must be numeric")
   if(newgrouping[1L] != 1) stop("grouping must have 1 as its first element")
@@ -337,7 +336,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
 
   ## Calculate the fitted values of each observation, which are the probabilities
   ## of getting each of the levels of the response
-  eta <- if(num_beta) offset + sapply(ind_H, function(h) drop(x[,which(newgrouping == h)] %*% beta[which(newgrouping == h)]))
+  eta <- if(num_beta) offset + sapply(ind_H, function(h) drop(x[,which(newgrouping == h), drop = FALSE] %*% beta[which(newgrouping == h)]))
  else offset + rep(0, n)
   fitted <- matrix(1,n,llev)
   for (k in 2:(llev)) {
@@ -389,8 +388,7 @@ posm.fit <- function(x, y, newgrouping, wt, start, offset, ...)
     u <- matrix(coefficients[num_beta + num_mu_k + ind_phi_totalk], ncol = H, nrow = num_phi_k)
     phi <- apply(u, 2, function(v) c(0 , expit(cumsum(c(v[1L], exp(v[-1L])))), 1))
     eta <- offset
-    if (num_beta) eta <- eta + sapply(ind_H, function(h) drop(x[,which(newgrouping == h)] %*% coefficients[which(newgrouping == h)]))
-
+    if (num_beta) eta <- eta + sapply(ind_H, function(h) drop(x[,which(newgrouping == h), drop = FALSE] %*% coefficients[which(newgrouping == h)]))
 
     ## Construct the probabilities of getting each level of the response for
     ## each observation
