@@ -73,8 +73,7 @@ forward.stepwise.POSM <- function(Outcome,
                    silent = TRUE)
     ))
   MinimumAIC <- min(AIC_aux, na.rm = TRUE)
-  if (is.infinite(MinimumAIC))
-    stop("No model configuration led to convergence.")
+  if (is.infinite(MinimumAIC)) stop("No model configuration led to convergence.")
   Chosen.Variable <- names(AIC_aux[which.min(AIC_aux)])
   formula_aux <- paste0(formula_aux, Chosen.Variable)
   Covariates <- Covariates[!(Covariates %in% Chosen.Variable)]
@@ -134,47 +133,15 @@ forward.stepwise.POSM <- function(Outcome,
       Chosen.Variable <- names(which.min(AIC_aux[[ind1]]))
       formula_aux <- paste0(formula_aux, " + ", Chosen.Variable)
       Covariates <- Covariates[!(Covariates %in% Chosen.Variable)]
-      if (keep)
-        history <- c(
-          history,
-          paste0(
-            formula_aux,
-            " (grouping: ",
-            paste(grouping_aux, collapse = ", "),
-            "; AIC: ",
-            round(MinimumAIC, 3),
-            ") Time: ",
-            round(
-              difftime(
-                time1 = Sys.time(),
-                time2 = start_time,
-                units = "secs"
-              ),
-              3
-            ),
-            " secs"
-          )
+      if (keep) history <- c(history, paste0(formula_aux," (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
+            round(MinimumAIC, 3), ") Time: ", round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3), " secs")
         )
     }
   }
 
-  OUT <- paste0(
-    formula_aux,
-    " (SetCov: ",
-    paste(SetCov_aux, collapse = ", "),
-    "; AIC: ",
-    round(MinimumAIC, 3),
-    ") Time: ",
-    round(
-      difftime(
-        time1 = Sys.time(),
-        time2 = start_time,
-        units = "secs"
-      ),
-      3
-    ),
-    " secs"
-  )} else {
+  OUT <- paste0(formula_aux, " (SetCov: ", paste(SetCov_aux, collapse = ", "), "; AIC: ",
+    round(MinimumAIC, 3),") Time: ", round(difftime(time1 = Sys.time(),time2 = start_time,units = "secs"), 3)," secs")
+  } else {
 
     # Step 1: Fit univariate OSM with each potential covariate and keep the BIC
     BIC_aux <- sapply(Covariates, function(var)
@@ -269,23 +236,8 @@ forward.stepwise.POSM <- function(Outcome,
       }
     }
 
-    OUT <- paste0(
-      formula_aux,
-      " (SetCov: ",
-      paste(SetCov_aux, collapse = ", "),
-      "; BIC: ",
-      round(MinimumBIC, 3),
-      ") Time: ",
-      round(
-        difftime(
-          time1 = Sys.time(),
-          time2 = start_time,
-          units = "secs"
-        ),
-        3
-      ),
-      " secs"
-    )
+    OUT <- paste0(formula_aux, " (SetCov: ", paste(SetCov_aux, collapse = ", "), "; BIC: ", round(MinimumBIC, 3), ") Time: ",
+      round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3)," secs")
   }
   if (keep)
     OUT <- c(history, OUT)
