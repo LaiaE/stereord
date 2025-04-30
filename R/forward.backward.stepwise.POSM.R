@@ -16,8 +16,6 @@
 #'@param data a data frame, list, or environment in which to evaluate the
 #'variables used in the model selection procedure.
 #'
-#' @param IC Information criterion to be used as the stopping rule. Must be
-#' either 'AIC' or 'BIC'.
 #'
 #' @param NominalVarSameGroup logical for whether different levels of a categorical
 #' variable should be forced into the same group.
