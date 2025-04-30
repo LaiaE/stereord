@@ -29,9 +29,6 @@ variable should be forced into the same group.}
 \item{keep}{logical for whether to keep a record of all selection steps.}
 
 \item{maxSteps}{the maximum number of steps allowed during the model selection process.}
-
-\item{IC}{Information criterion to be used as the stopping rule. Must be
-either 'AIC' or 'BIC'.}
 }
 \description{
 A model selection strategy for the POSM that builds the model incrementally
