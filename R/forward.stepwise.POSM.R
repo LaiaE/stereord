@@ -114,7 +114,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
 
     if (!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)) {
       CONT <- FALSE
-      history <- history[-length(history)]
+      if (keep) history <- history[-length(history)]
     } else if (length(Covariates) == 1) {
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)
@@ -194,7 +194,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
 
       if (!any(unlist(BIC_aux) < MinimumBIC, na.rm = TRUE)) {
         CONT <- FALSE
-        history <- history[-length(history)]
+        if (keep) history <- history[-length(history)]
       } else if (length(Covariates) == 1) {
         CONT <- FALSE
         MinimumBIC <- min(unlist(BIC_aux), na.rm = TRUE)

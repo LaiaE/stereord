@@ -130,7 +130,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
     if(!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)){
       CONT <- FALSE
-      history <- history[-length(history)]
+      if (keep) history <- history[-length(history)]
     } else if(length(Covariates) == 1 | step == maxSteps){
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)

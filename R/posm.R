@@ -337,7 +337,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
   deviance <- ans$deviance
   edf <- num_beta + qminus + (qminus-1)*H
   aic <- deviance + 2*edf
-  bic <- deviance + edf*log(sum(ans$wt))
+  bic <- deviance + edf*log(sum(wt))
   u <- ans$u
 
   ## Calculate the fitted values of each observation, which are the probabilities

@@ -93,7 +93,7 @@ exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup
 
     if(!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)){
       CONT <- FALSE
-      history <- history[-length(history)]
+      if (keep) history <- history[-length(history)]
     } else if(step == S){
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)
