@@ -32,6 +32,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
                                            keep = FALSE,
                                            maxSteps = 100){
   start_time <- Sys.time()
+  if(!is.factor(data[,Outcome])) stop("response must be a factor")
 
   if (any(!(Covariates %in% names(data))))
     warning(paste0(
@@ -46,8 +47,6 @@ forward.backward.stepwise.POSM <- function(Outcome,
     stop("The outcome variable is not found in the data.")
   if (length(Covariates) <= 1)
     stop("At least two covariates are required to use this method.")
-  if (!(IC %in% c("AIC", "BIC")))
-    stop("The information criterion (IC) must be either 'AIC' or 'BIC'.")
 
   if (NominalVarSameGroup) {
     matrixdata <- model.matrix(as.formula(paste0("~ ", paste(
@@ -131,8 +130,8 @@ forward.backward.stepwise.POSM <- function(Outcome,
 
     if(!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)){
       CONT <- FALSE
+      history <- history[-length(history)]
     } else if(length(Covariates) == 1 | step == maxSteps){
-
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)
       ind1 <- which(sapply(AIC_aux, function(x) any(x == MinimumAIC)))
@@ -150,9 +149,6 @@ forward.backward.stepwise.POSM <- function(Outcome,
       }
 
       formula_minAIC <- paste0(formula_aux, paste0(Model.Vars, collapse = " + "))
-      if (keep) history <- c(history, paste0(formula_aux," (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
-                                             round(MinimumAIC, 3), ") Time: ",
-                                             round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3), " secs"))
 
       # Last step remove
       if(length(Covariates) == 1 & length(Model.Vars)>2){
@@ -178,7 +174,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
         })
 
         if(any(AIC_aux_rem < MinimumAIC, na.rm = TRUE)){
-          if (keep) history <- c(history, paste0(formula_aux," (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
+          if (keep) history <- c(history, paste0(formula_minAIC," (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
                                                  round(MinimumAIC, 3), ") Time: ",
                                                  round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3), " secs"))
           MinimumAIC <- min(AIC_aux_rem, na.rm = TRUE)
@@ -214,14 +210,18 @@ forward.backward.stepwise.POSM <- function(Outcome,
       }
 
       formula_minAIC <- paste0(formula_aux, paste0(Model.Vars, collapse = " + "))
+      if (keep) history <- c(history, paste0(formula_minAIC," (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
+                                             round(MinimumAIC, 3), ") Time: ",
+                                             round(difftime(time1 = Sys.time(), time2 = start_time, units = "secs"), 3), " secs"))
       step <- step + 1
 
     }
   }
 
   end_time <- Sys.time()
-  OUT <- paste0(formula_minAIC, " (SetCov: ", paste(grouping_aux, collapse = ", "),
-                "; AIC: ", round(as.numeric(MinimumAIC),3), ") Time: ", difftime(time1 = end_time, time2 = start_time, units = "secs"), " secs")
+  OUT <- paste0(formula_minAIC, " (grouping: ", paste(grouping_aux, collapse = ", "),
+                "; AIC: ", round(as.numeric(MinimumAIC),3), ") Time: ",
+                round(difftime(time1 = end_time, time2 = start_time, units = "secs"),3), " secs")
   if (keep) OUT <- c(history, OUT)
   if (keep) names(OUT) <- paste("Step", seq_len(length(OUT)), ":")
   return(OUT)

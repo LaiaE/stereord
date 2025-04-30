@@ -23,6 +23,7 @@
 #' @export
 exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup = FALSE, keep = FALSE){
   start_time <- Sys.time()
+  if(!is.factor(data[,Outcome])) stop("response must be a factor")
   if (any(!(Covariates %in% names(data))))
     warning(paste0("Variables ",
       paste0(Covariates[!(Covariates %in% names(data))], collapse = ", "),
@@ -34,8 +35,6 @@ exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup
     stop("The outcome variable is not found in the data.")
   if (length(Covariates) <= 1)
     stop("At least two covariates are required to use this method.")
-  if (!(IC %in% c("AIC", "BIC")))
-    stop("The information criterion (IC) must be either 'AIC' or 'BIC'.")
 
   if (NominalVarSameGroup) {
     matrixdata <- model.matrix(as.formula(paste0("~ ", paste(
@@ -71,13 +70,16 @@ exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup
 
   CONT <- TRUE
   step <- 2
+
   while(CONT){
 
     # Step 3: Fit possible OSM and POSM adding 1 covariate
     Posible.cov <- combn(Covariates, m = step)
 
     Possible.SetCov <- expand.grid(rep(list(1:step), step))
-    ind <- apply(Possible.SetCov, 1, function(l){l <- unique(as.numeric(l)); ifelse(!identical(l, as.numeric(1:max(l))), 2, 1)})
+    ind <- apply(Possible.SetCov, 1,
+                 function(l){l <- unique(as.numeric(l));
+                 ifelse(!identical(l, as.numeric(1:max(l))), 2, 1)})
     Possible.SetCov <- Possible.SetCov[ind == 1,]
     Possible.SetCov <- split(as.matrix(Possible.SetCov), seq(nrow(Possible.SetCov)))
     Possible.SetCov <- lapply(Possible.SetCov, as.numeric)
@@ -91,6 +93,7 @@ exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup
 
     if(!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)){
       CONT <- FALSE
+      history <- history[-length(history)]
     } else if(step == S){
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)
@@ -104,9 +107,9 @@ exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup
       grouping_aux <- Possible.SetCov[[ind1]]
       Chosen.Variable <- Posible.cov[,which.min(AIC_aux[[ind1]])]
       formula_minAIC <- paste0(formula_aux,  paste(Chosen.Variable, collapse = " + "))
-      if (keep) history <- paste0(formula_minAIC, " (grouping: ", paste(grouping_aux, collapse = ", "),
+      if (keep) history <- c(history, paste0(formula_minAIC, " (grouping: ", paste(grouping_aux, collapse = ", "),
                                   "; AIC: ", round(MinimumAIC, 3), ") Time: ",
-                                  round(difftime(time1 = Sys.time(),time2 = start_time,units = "secs"),3), " secs")
+                                  round(difftime(time1 = Sys.time(),time2 = start_time,units = "secs"),3), " secs"))
 
       step <- step + 1
     }

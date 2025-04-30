@@ -28,6 +28,7 @@
 forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
                                   NominalVarSameGroup = FALSE, keep = FALSE) {
   start_time <- Sys.time()
+  if(!is.factor(data[,Outcome])) stop("response must be a factor")
 
   if (any(!(Covariates %in% names(data))))
     warning(paste0(
@@ -113,6 +114,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
 
     if (!any(unlist(AIC_aux) < MinimumAIC, na.rm = TRUE)) {
       CONT <- FALSE
+      history <- history[-length(history)]
     } else if (length(Covariates) == 1) {
       CONT <- FALSE
       MinimumAIC <- min(unlist(AIC_aux), na.rm = TRUE)
@@ -135,7 +137,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
     }
   }
 
-  OUT <- paste0(formula_aux, " (SetCov: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
+  OUT <- paste0(formula_aux, " (grouping: ", paste(grouping_aux, collapse = ", "), "; AIC: ",
     round(MinimumAIC, 3),") Time: ", round(difftime(time1 = Sys.time(),time2 = start_time,units = "secs"), 3)," secs")
   } else {
 
@@ -192,6 +194,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
 
       if (!any(unlist(BIC_aux) < MinimumBIC, na.rm = TRUE)) {
         CONT <- FALSE
+        history <- history[-length(history)]
       } else if (length(Covariates) == 1) {
         CONT <- FALSE
         MinimumBIC <- min(unlist(BIC_aux), na.rm = TRUE)
