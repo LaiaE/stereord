@@ -21,7 +21,7 @@
 #' variable should be forced into the same group.
 #'
 #' @export
-exaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup = FALSE, keep = FALSE){
+exhaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup = FALSE, keep = FALSE){
   start_time <- Sys.time()
   if(!is.factor(data[,Outcome])) stop("response must be a factor")
   if (any(!(Covariates %in% names(data))))
