@@ -64,12 +64,12 @@
 #'
 #' The overall model takes the following form:
 #'
-#' log(P(Y = k | X)/P(Y = 1 | X)) = mu_k + sum_{h=1}^H phi_k^h beta_vec_h^T x_h_vec
+#' log(P(Y = k | X)/P(Y = 1 | X)) = alpha_k + sum_{h=1}^H phi_k^h beta_vec_h^T x_h_vec
 #'
 #' for k = 2, ..., q, where H is the number of groups of covaraites and x_h_vec is the
 #' vector of covariates for the the group h (h = 1, ..., H).
 #'
-#' #' mu_1 is fixed at 0 for identifiability of the model, and each set of phi_k^h parameters
+#' #' alpha_1 is fixed at 0 for identifiability of the model, and each set of phi_k^h parameters
 #' are constrained to be ordered (giving the model its name) in the following
 #' way:
 #'
@@ -81,7 +81,7 @@
 #' values for estimating the model parameters.
 #'
 #' The first part of the \code{start} vector is starting values for the
-#' coefficients of the covariates, the second part is starting values for the mu
+#' coefficients of the covariates, the second part is starting values for the alpha
 #' values (per-category intercepts), and the third part is starting values for
 #' the raw parameters used to construct the phi values.
 #'
@@ -89,9 +89,9 @@
 #' categories in response variable - 1) + Hx(number of categories in response
 #' variable - 2). Every one of the values can take any real value.
 #'
-#' The second part is the starting values for the mu_k per-category intercept
-#' parameters, and since mu_1 is fixed at 0 for identifiability, the number of
-#' non-fixed mu_k parameters is one fewer than the number of categories.
+#' The second part is the starting values for the alpha_k per-category intercept
+#' parameters, and since alpha_1 is fixed at 0 for identifiability, the number of
+#' non-fixed alpha_k parameters is one fewer than the number of categories.
 #'
 #' The third part of the starting vector is a re-parametrization used to
 #' construct starting values for the estimated sets of phi parameters such that the phi
@@ -125,7 +125,7 @@
 #'
 #'   \code{beta} the coefficients of the covariates, with NO intercept.
 #'
-#'   \code{mu} the intercepts for the categories.
+#'   \code{alpha} the intercepts for the categories.
 #'
 #'   \code{phi} matrix with the H sets of score parameters, each column is a
 #'   different set (restricted to be ordered).
@@ -331,7 +331,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
   ## "res" is the output object from optim(), which contains the hessian
   ## object if requested
   beta <- ans$beta
-  mu <- c(0,ans$mu)
+  alpha <- c(0,ans$alpha)
   phi <- ans$phi
   res <- ans$res
   deviance <- ans$deviance
@@ -346,7 +346,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
  else offset + rep(0, n)
   fitted <- matrix(1,n,llev)
   for (k in 2:(llev)) {
-    fitted[,k] <- exp(pmax(pmin(50,mu[k]+drop(eta %*% phi[k,])),-100))
+    fitted[,k] <- exp(pmax(pmin(50,alpha[k]+drop(eta %*% phi[k,])),-100))
   }
   fitted <- fitted/rowSums(fitted)
   dimnames(fitted) <- list(row.names(m), lev)
@@ -358,7 +358,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
   groups <- sapply(ind_H, function(h) paste("Group", h, ":", paste(colnames(x)[which(newgrouping == h)], collapse = ", ")))
 
   ## Construct the output object
-  fit <- list(beta = beta, mu = mu, phi = phi, u = u, deviance = deviance,
+  fit <- list(beta = beta, alpha = alpha, phi = phi, u = u, deviance = deviance,
               aic = aic, bic = bic, groups = groups, newgrouping = newgrouping,
               fitted.values = fitted, lev = lev, terms = Terms,
               df.residual = sum(wt) - num_beta - qminus - (qminus-1),
@@ -367,7 +367,7 @@ posm <- function(formula, grouping, data, weights, start, ..., subset,
               convergence = res$convergence, niter = niter, eta = eta)
 
   if(Hess) {
-    dn <- c(names(beta), names(ans$mu), paste0(rep(rownames(ans$u), times = ncol(ans$u)), rep(colnames(ans$u), each = nrow(ans$u))))
+    dn <- c(names(beta), names(ans$alpha), paste0(rep(rownames(ans$u), times = ncol(ans$u)), rep(colnames(ans$u), each = nrow(ans$u))))
     H <- res$hessian
     dimnames(H) <- list(dn, dn)
     fit$Hessian <- H
@@ -385,7 +385,7 @@ posm.fit <- function(x, y, newgrouping, wt, start, offset, ...)
   ## Set up the function call to use in optim(), which extracts the parameters
   ## from the parameter vector and calculates the negative of the log-likelihood
   fmin <- function(coefficients) {
-    mu <- c(0, coefficients[num_beta + ind_mu_k])
+    alpha <- c(0, coefficients[num_beta + ind_mu_k])
 
     ## u are the auxiliary parameters for phi, which are used because they
     ## are free to take any value between -Inf and Inf, and don't have to be
@@ -400,7 +400,7 @@ posm.fit <- function(x, y, newgrouping, wt, start, offset, ...)
     ## each observation
     theta <- matrix(1, nrow=n, ncol=num_mu_k+1)
     for (k in 2:(num_mu_k+1)) {
-      theta[,k] <- exp(pmax(pmin(50,mu[k]+drop(eta %*% phi[k,])),-100))
+      theta[,k] <- exp(pmax(pmin(50,alpha[k]+drop(eta %*% phi[k,])),-100))
     }
     theta <- theta/rowSums(theta)
 
@@ -438,17 +438,17 @@ posm.fit <- function(x, y, newgrouping, wt, start, offset, ...)
   ## Run optim, and extract the results
   res <- optim(start, fmin, method="L-BFGS-B", ...)
   beta <- res$par[ind_beta]
-  mu <- res$par[num_beta + ind_mu_k]
+  alpha <- res$par[num_beta + ind_mu_k]
   u <- matrix(res$par[num_beta + num_mu_k + ind_phi_totalk], ncol = H, nrow = num_phi_k)
   phi <- phi <- apply(u, 2, function(v) c(0 , expit(cumsum(c(v[1L], exp(v[-1L])))), 1))
   deviance <- 2 * res$value
-  names(mu) <- paste(lev[1L], lev[-1L], sep="|")
+  names(alpha) <- paste(lev[1L], lev[-1L], sep="|")
   rownames(phi) <- lev
   colnames(phi) <- paste("Group", ind_H)
   rownames(u) <- paste0("phiAux",lev[-c(1L,length(lev))])
   colnames(u) <- paste("Group", ind_H)
   if(num_beta) names(beta) <- colnames(x)
-  list(beta = beta, mu = mu, phi = phi, u=u, deviance = deviance, res = res)
+  list(beta = beta, alpha = alpha, phi = phi, u=u, deviance = deviance, res = res)
 }
 
 #' @importFrom stats naprint
@@ -465,8 +465,8 @@ print.posm <- function(x, ...)
   } else {
     cat("\nNo coefficients\n")
   }
-  cat("\nIntercepts mu:\n")
-  print(x$mu, ...)
+  cat("\nIntercepts alpha:\n")
+  print(x$alpha, ...)
   cat("\nScore parameters phi:\n")
   print(x$phi, ...)
   cat("\nGrouping:\n")
@@ -498,7 +498,7 @@ vcov.posm <- function(object, ...){
     message("\nRe-fitting to get Hessian\n")
     utils::flush.console()
     object <- update(object, Hess = TRUE,
-                     start = c(object$beta, object$mu[ind_mu_k + 1L], c(object$phi[ind_u_k + 1L, ])))
+                     start = c(object$beta, object$alpha[ind_mu_k + 1L], c(object$phi[ind_u_k + 1L, ])))
   }
 
   vc <- ginv(object$Hessian)
@@ -545,7 +545,7 @@ summary.posm <- function(object, digits = max(3, .Options$digits - 3), correlati
   q <- nrow(object$phi)
   H <- ncol(object$phi)
   hind <- seq_len(H)
-  cc <- c(object$beta, object$mu[-1L])
+  cc <- c(object$beta, object$alpha[-1L])
   coef <- matrix(0, pc+q-1L, 4L, dimnames=list(names(cc),
                                                c("Value", "Std. Error", "t value", "Pr(>|t|)")))
 
@@ -614,7 +614,7 @@ print.summary.posm <- function(x, digits = x$digits, signif.stars = x$signif.sta
   } else {
     cat("\nNo coefficients\n")
   }
-  cat("\nIntercepts (mu):\n")
+  cat("\nIntercepts (alpha):\n")
   printCoefmat(coef[(pc+1L):nrow(coef), , drop=FALSE], digits = digits, quote = FALSE,
                signif.stars = signif.stars, signif.legend = FALSE, na.print = "NA", ...)
 
