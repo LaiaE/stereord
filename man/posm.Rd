@@ -60,7 +60,7 @@ An object of class \code{"osm"}.  This has components
 
 \code{beta} the coefficients of the covariates, with NO intercept.
 
-\code{mu} the intercepts for the categories.
+\code{alpha} the intercepts for the categories.
 
 \code{phi} matrix with the H sets of score parameters, each column is a
 different set (restricted to be ordered).
@@ -143,12 +143,12 @@ response being in the lower categories.
 
 The overall model takes the following form:
 
-log(P(Y = k | X)/P(Y = 1 | X)) = mu_k + sum_{h=1}^H phi_k^h beta_vec_h^T x_h_vec
+log(P(Y = k | X)/P(Y = 1 | X)) = alpha_k + sum_{h=1}^H phi_k^h beta_vec_h^T x_h_vec
 
 for k = 2, ..., q, where H is the number of groups of covaraites and x_h_vec is the
 vector of covariates for the the group h (h = 1, ..., H).
 
-#' mu_1 is fixed at 0 for identifiability of the model, and each set of phi_k^h parameters
+#' alpha_1 is fixed at 0 for identifiability of the model, and each set of phi_k^h parameters
 are constrained to be ordered (giving the model its name) in the following
 way:
 
@@ -160,7 +160,7 @@ for each h = 1, ..., H.
 values for estimating the model parameters.
 
 The first part of the \code{start} vector is starting values for the
-coefficients of the covariates, the second part is starting values for the mu
+coefficients of the covariates, the second part is starting values for the alpha
 values (per-category intercepts), and the third part is starting values for
 the raw parameters used to construct the phi values.
 
@@ -168,9 +168,9 @@ The length of the vector is (number of covariate terms) + (number of
 categories in response variable - 1) + Hx(number of categories in response
 variable - 2). Every one of the values can take any real value.
 
-The second part is the starting values for the mu_k per-category intercept
-parameters, and since mu_1 is fixed at 0 for identifiability, the number of
-non-fixed mu_k parameters is one fewer than the number of categories.
+The second part is the starting values for the alpha_k per-category intercept
+parameters, and since alpha_1 is fixed at 0 for identifiability, the number of
+non-fixed alpha_k parameters is one fewer than the number of categories.
 
 The third part of the starting vector is a re-parametrization used to
 construct starting values for the estimated sets of phi parameters such that the phi
