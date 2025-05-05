@@ -17,8 +17,9 @@
 #'variables used in the model selection procedure.
 #'
 #'
-#' @param NominalVarSameGroup logical for whether different levels of a categorical
-#' variable should be forced into the same group.
+#' @param split_categorical logical for whether different levels of a categorical
+#' variable should be forced into the same group. If TRUE, dummy variables derived
+#' from the same categorical covariate are treated as a independent covariates.
 #'
 #' @param keep logical for whether to keep a record of all selection steps.
 #'
@@ -28,7 +29,7 @@
 forward.backward.stepwise.POSM <- function(Outcome,
                                            Covariates,
                                            data,
-                                           NominalVarSameGroup = FALSE,
+                                           split_categorical = FALSE,
                                            keep = FALSE,
                                            maxSteps = 100){
   start_time <- Sys.time()
@@ -48,7 +49,7 @@ forward.backward.stepwise.POSM <- function(Outcome,
   if (length(Covariates) <= 1)
     stop("At least two covariates are required to use this method.")
 
-  if (NominalVarSameGroup) {
+  if (split_categorical) {
     matrixdata <- model.matrix(as.formula(paste0("~ ", paste(
       Covariates, collapse = " + "
     ))),

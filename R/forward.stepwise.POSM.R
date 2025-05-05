@@ -19,14 +19,15 @@
 #' @param IC Information criterion to be used as the stopping rule. Must be
 #' either 'AIC' or 'BIC'.
 #'
-#' @param NominalVarSameGroup logical for whether different levels of a categorical
-#' variable should be forced into the same group.
+#' @param split_categorical logical for whether different levels of a categorical
+#' variable should be forced into the same group. If TRUE, dummy variables derived
+#' from the same categorical covariate are treated as a independent covariates.
 #'
 #' @param keep logical for whether to keep a record of all selection steps.
 #'
 #' @export
 forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
-                                  NominalVarSameGroup = FALSE, keep = FALSE) {
+                                  split_categorical = FALSE, keep = FALSE) {
   start_time <- Sys.time()
   if(!is.factor(data[,Outcome])) stop("response must be a factor")
 
@@ -46,7 +47,7 @@ forward.stepwise.POSM <- function(Outcome, Covariates, data, IC = "AIC",
   if (!(IC %in% c("AIC", "BIC")))
     stop("The information criterion (IC) must be either 'AIC' or 'BIC'.")
 
-  if (NominalVarSameGroup) {
+  if (split_categorical) {
     matrixdata <- model.matrix(as.formula(paste0("~ ", paste(
       Covariates, collapse = " + "
     ))),

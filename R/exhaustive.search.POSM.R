@@ -17,11 +17,12 @@
 #'@param data a data frame, list, or environment in which to evaluate the
 #'variables used in the model selection procedure.
 #'
-#' @param NominalVarSameGroup logical for whether different levels of a categorical
-#' variable should be forced into the same group.
+#' @param split_categorical logical for whether different levels of a categorical
+#' variable should be forced into the same group. If TRUE, dummy variables derived
+#' from the same categorical covariate are treated as a independent covariates.
 #'
 #' @export
-exhaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGroup = FALSE, keep = FALSE){
+exhaustive.search.POSM <- function(Outcome, Covariates, data, split_categorical = FALSE, keep = FALSE){
   start_time <- Sys.time()
   if(!is.factor(data[,Outcome])) stop("response must be a factor")
   if (any(!(Covariates %in% names(data))))
@@ -36,7 +37,7 @@ exhaustive.search.POSM <- function(Outcome, Covariates, data, NominalVarSameGrou
   if (length(Covariates) <= 1)
     stop("At least two covariates are required to use this method.")
 
-  if (NominalVarSameGroup) {
+  if (split_categorical) {
     matrixdata <- model.matrix(as.formula(paste0("~ ", paste(
       Covariates, collapse = " + "
     ))),
