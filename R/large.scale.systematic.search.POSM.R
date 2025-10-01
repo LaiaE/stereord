@@ -2,7 +2,7 @@
 #' Partial Ordered Stereotype Model (POSM).
 #'
 #' A model selection strategy for the POSM that
-#' builds the model incrementally performs an exhaustive search of the overall
+#' builds the model incrementally performs a large-scale systematic search of the overall
 #' best model. The overall best model is the model with the lowest AIC among
 #' all the candidates. It fits all possible models for each number of possible
 #' covariates in each step until no further improvement in AIC is observed,
@@ -22,7 +22,7 @@
 #' from the same categorical covariate are treated as a independent covariates.
 #'
 #' @export
-exhaustive.search.POSM <- function(Outcome, Covariates, data, split_categorical = FALSE, keep = FALSE){
+large.scale.systematic.search.POSM <- function(Outcome, Covariates, data, split_categorical = FALSE, keep = FALSE){
   start_time <- Sys.time()
   if(!is.factor(data[,Outcome])) stop("response must be a factor")
   if (any(!(Covariates %in% names(data))))
