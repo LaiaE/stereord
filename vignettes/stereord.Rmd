@@ -1,10 +1,10 @@
 ---
 title: "Regression with the Partial Ordered Stereotype Model"
 author: "Laia Egea-Cortes"
-# output: rmarkdown::html_vignette
-output: 
-  pdf_document:
-    toc: no
+output: rmarkdown::html_vignette
+#output: 
+#  pdf_document:
+#    toc: no
 vignette: >
   %\VignetteIndexEntry{stereord}
   %\VignetteEngine{knitr::rmarkdown}
@@ -22,9 +22,9 @@ knitr::opts_chunk$set(
 ```
 
 # Introduction
-The `stereord` package  provides tools for modeling ordinal response variables using the Ordered Stereotype Model (OSM) and the newly developed Partial Ordered Stereotype Model (POSM). It also includes model selection procedures specifically designed for the POSM.
+The `stereord` package  provides tools for modeling ordinal response variables using the newly developed Partial Ordered Stereotype Model (POSM). Additionally, it includes model selection procedures specifically designed for the POSM.
 
-In order to demonstrate the use of the `osm()` function, we will first load the `arthritis` dataset from the `multgee` package. This dataset contains self-assessment scores from 302 rheumatoid arthritis patients at an initial baseline assessment and at two follow-up times.
+In order to demonstrate the use of the `posm()` function, we will first load the `arthritis` dataset from the `multgee` package (Touloumis, A., 2015). This dataset contains self-assessment scores from 302 rheumatoid arthritis patients at three follow-up times (variable `time` recorded in months).
 
 ```{r, warning=FALSE, message=FALSE}
 library(MASS)
@@ -34,103 +34,36 @@ data(arthritis)
 head(arthritis)
 ```
 
-The variable `y` is the self-assessment score, measured on a five-level ordinal response scale, and will serve as our ordinal response. We will transform it into a factor, which equired for the analysis. Since the response is already coded with values from 1 to 5, we do not need to modify the default factor levels.
+The variable `y` is the self-assessment score, measured on a five-level ordinal response scale from 1 (very poor) to 5 (very good), and will serve as our ordinal response. We will transform it into a factor, which required for the analysis. Since the response is already coded with values from 1 to 5, we do not need to modify the default factor levels.
 
 ```{r}
 arthritis$y <- factor(arthritis$y)
 ```
 
-Since the POSM is designed for cross-sectional data, and the `arthritis` dataset is longitudinal, we will select the basline measurement for each subject (`time = 1`) to ensure the data structure is appropriate for the analysis.
+Since the POSM is designed for cross-sectional data, and the `arthritis` dataset is longitudinal, we will select the firs follow-up data for each subject (`time = 1`) to ensure the data structure is appropriate for the analysis.
 
 ```{r}
 arthritis <- arthritis[arthritis$time == 1,]
 ```
 
-# Model Selection
-
-The data set includes four potential covariates related to ´y´: sex (coded as `1` for female and `2` for male), age (recorded at baseline), trt (treatment group variable, coded as `1` for the placebo group and `2` for the drug group), and baseline (self-assessment score of rheumatoid arthritis at baseline). We will transform the covariates sex and trt into factors: 
+We will transform the covariates sex and trt into factors: 
 
 ```{r}
 arthritis$sex <- factor(arthritis$sex)
 arthritis$trt <- factor(arthritis$trt)
 ```
 
-To identify the optimal model, defined as the candidate model with the lowest AIC value, we apply three selection strategies: one based on the forward stepwise algorithm, another based on the combined forward-backward stepwise algorithm, and an exhaustive search. These methods will select the relevant covariates, number of groups of covariates, and grouping the covariates accordingly.
-
-## Forward Stepwise 
-
-A model selection strategy for the POSM that builds the model incrementally using a forward stepwise approach. At each step, the method selects both the covariate and its group assignment that achieve the greatest improvement in the Akaike Information Criterion (AIC). Therefore, this algorithm not only selects the relevant predictors, but also determines the appropriate number of covariate groups and assigns predictors to groups accordingly.
-
-We run the forward stepwise method:
-
-```{r}
-fs.arthritis <- forward.stepwise.POSM(Outcome = "y",
-                                      Covariates = c("sex", "age", "trt", 
-                                                     "baseline"),
-                                      data = arthritis)
-fs.arthritis
-```
-
-By default, this method uses the AIC as the stopping rule (`IC = "AIC"`). Additionally, it place all dummy variables generated from a categorical variable into the same group (`NominalVarSameGroup = FALSE`). Finally, it does not show every intermediate step (`keep = FALSE`). 
-
-If we instead use the BIC as the information criterion, the result changes:
-```{r}
-forward.stepwise.POSM(Outcome = "y", 
-                      Covariates = c("sex", "age", "trt", "baseline"),
-                      data = arthritis, IC = "BIC")
-```
-
-If we would like to see all the steps taken during the model selection process:
-```{r}
-forward.stepwise.POSM(Outcome = "y", 
-                      Covariates = c("sex", "age", "trt", "baseline"),
-                      data = arthritis, keep = TRUE)
-```
-Note that three steps were needed to find the optimal model. 
-
-## Forward-Backward Stepwise 
-
-The forward-backward stepwise method provides a more flexible approach than forward selection, allowing both forward additions and backward eliminations of covariates during the model building process.
-
-We run the forward-backward stepwise method:
-
-```{r}
-fbs.arthritis <- forward.backward.stepwise.POSM(Outcome = "y",
-                                                Covariates = c("sex", "age", 
-                                                               "trt", 
-                                                               "baseline"),
-                                                data = arthritis)
-fbs.arthritis
-```
-As with the `forward.stepwise.POSM()` function, this method uses the AIC as the stopping rule. Note that the option to use the BIC is not yet implemented in this function. Like before, all dummy variables generated from a categorical variable are placed into the same group (`NominalVarSameGroup = FALSE`), and intermediate steps are not shown by default (`keep = FALSE`). Additionally, this function includes a `maxSteps` argument to define the maximum number of steps allowed during the selection process, with a default value of 100.
-
-
-## Exaustive Search 
-
-This model selection method performs an exhaustive search of the overall best model. It fits all possible models for each number of possible covariates in each step until no further improvement in AIC is observed.
-
-We run the exaustive search method:
-```{r}
-es.arthritis <- exaustive.search.POSM(Outcome = "y", 
-                                      Covariates = c("sex", "age", "trt", "baseline"),
-                                      data = arthritis)
-es.arthritis
-```
-As the `forward.backward.stepwise.POSM()` function, this method uses the AIC as the stopping rule and the option to use the BIC is not yet implemented. Like before, all dummy variables generated from a categorical variable are placed into the same group (`NominalVarSameGroup = FALSE`), and intermediate steps are not shown by default (`keep = FALSE`). 
-
-Note that all methods arrived at the same optimal model. The FBS method required slightly more time than the FS method because, in addition to fitting models that add covariates, it also fits models that remove covariates. The exhaustive search method takes significantly more time to run, as it fits all candidate models with a given number of covariates at each step. The number of candidate models increases sharply as the number of covariates grows. For this reason, computational time should be carefully considered when the number of potential covariates is large.
-
 # Model Fitting
 
-We will now fit the Partial Ordered Stereotype Model selected by the methods. The selected model includes three covariates: baseline, trt, and sex, grouped into two groups: baseline and sex in one group, and trt in another. 
+We will now fit the Partial Ordered Stereotype Model, whose selection will be motivated by model selection procedures discussed in the following section. The model includes three covariates: baseline, trt, and sex, grouped into two groups: baseline and sex in one group, and trt in another. 
 
-If we define $Y$ as our ordinal response variable with $q$ levels indexed by $k = 1, \dots, q$, and $Y_i$ depends on the covariates baseline defined as $x_1$, trt as $x_2$ and sex as $x_3$. Therefore, the partial ordered stereotype model takes the form
+If we define $Y$ as our ordinal response variable with $q$ levels indexed by $k = 2, \dots, q$, and the response is dependent on the covariates baseline defined as $x_1$, trt as $x_2$ and sex as $x_3$. Therefore, the partial ordered stereotype model takes the form
 $$
-\log\left(\dfrac{P(Y = k \,|\, \boldsymbol{x})}{P(Y = 1 \,|\, \boldsymbol{x})} \right) = \mu_k + \phi_k^1 ( \beta_1 x_1 + \beta_2 x_2) + \phi_k^2 (\beta_3 x_3)
+\log\left(\dfrac{P(Y = k \,|\, \boldsymbol{x})}{P(Y = 1 \,|\, \boldsymbol{x})} \right) = \alpha_k + \phi_k^1 ( \beta_1 x_1 + \beta_2 x_2) + \phi_k^2 (\beta_3 x_3)
 $$
-where $\mu_1$ is fixed at 0 for identifiability and $0 = \phi_1^h \leq \ldots \leq \phi_k^h \leq \ldots \leq \phi_q^h = 1$ for each $h = 1,2$. The restriction on the $\phi_k^h$ values is what makes this the partial **ordered** stereotype model.
+where $\alpha_1$ is fixed at 0 for identifiability and $0 = \phi_1^h \leq \ldots \leq \phi_k^h \leq \ldots \leq \phi_q^h = 1$ for each $h = 1,2$. The restriction on the $\phi_k^h$ values is what makes this the partial **ordered** stereotype model.
 
-The $\boldsymbol{\beta}$ values are the coefficients of the covariates, as in a linear regression model, except here they change the probability of $Y$ taking different levels. If a single coefficient is positive, it increases the probability of $Y$ taking higher levels, and if it is negative it increases the probability of $Y$ taking lower levels.
+The $\boldsymbol{\beta}$ values are the coefficients of the covariates, as in a linear regression model, except here they change the probability of $Y$ taking different levels. If a single coefficient is positive, it increases the probability of $Y$ taking higher levels, and if it is negative it increases the probability of $Y$ taking lower levels, as $x$ increases.
 
 Note that this is **not** a cumulative model, nor is it a logistic model, because the $\log$ function on the left hand side of the model equation is not a logit. 
 
@@ -153,51 +86,193 @@ fit <- posm(formula = y ~ baseline + trt + sex, grouping = c(1,2,1),
 fit
 ```
 
-Now we have obtained a converged solution. Applying the `summary()` function to the output, we obtain the standard errors and test statistics. The standard errors for $\mu_k$ and $\boldsymbol{\beta}$ are calculated as the square root of the diagonal elements of the inverse of the Fisher information matrix. Since the coefficients are estimated using the maximum likelihood method with a quasi-Newton approach, the Fisher information matrix corresponds to the Hessian. Therefore, the inverse of the Hessian serves as the variance-covariance matrix. As we estimate reparametrized sets of score parameters, the Delta method is applied to compute their standard errors. The statistical tests performed are t-tests, which assess whether each coefficient is significantly different from zero in the case of $\mu_k$ and $\boldsymbol{\beta}$. In the case of the score parameters, for each set, the tests assess whether each score parameter is significantly different from the previous or the subsequent score parameter.
+Now we have obtained a converged solution. 
+
+We can show a summary using the standard `summary()` function:
 
 ```{r}
-summary(fit)
+s.fit <- summary(fit)
+s.fit
 ```
+Applying the `summary()` function to the output, we obtain the standard errors and test statistics. The standard errors for $\alpha_k$ and $\boldsymbol{\beta}$ are calculated as the square root of the diagonal elements of the inverse of the Fisher information matrix. Since the coefficients are estimated using the maximum likelihood method with a quasi-Newton approach, the Fisher information matrix corresponds to the Hessian. Therefore, the inverse of the Hessian serves as the variance-covariance matrix. As we estimate reparametrized sets of score parameters, the Delta method is applied to compute their standard errors. The statistical tests performed are t-tests, which assess whether each coefficient is significantly different from zero in the case of $\alpha_k$ and $\boldsymbol{\beta}$. In the case of the score parameters, for each set, the tests assess whether each score parameter is significantly different from the previous or the subsequent score parameter.
 
 We can now move on to interpreting the results.
 
-## Covariate coefficients
+## Covariate coefficients ($\beta$)
 
-The `beta` estimates are the estimated coefficients of the covariates baseline, trt, and sex. More positive values correspond to a higher probability of getting high response levels (i.e. in this case, you're more likely to get y = 4 or 5 than 1 or 2), and more negative values correspond to a higher probability of getting low response levels (i.e. you're more likely to get y = 1 or 2 than 4 or 5). 
+The `beta` estimates are the estimated coefficients of the covariates baseline, trt, and sex. More positive values correspond to a higher probability of getting high response levels (i.e., in this case, you're more likely to get y = 4 or 5 than 1 or 2), and more negative values correspond to a higher probability of getting low response levels (i.e. you're more likely to get y = 1 or 2 than 4 or 5), as $x$ increases. 
+
+We can access the covariate coefficients ($\beta$) from the model object using:
+
+```{r}
+fit$beta
+```
 
 We see that the coefficient for baseline is 1.90, which indicates that the baseline score for an individual has a big impact on their follow-up self assessment score. If the baseline increases by one level, then that makes it more likely that the follow-up self-assessment score, `y`, will also be higher.
 
-We see that the coefficient for trt is 1.86, similar to the one for baseline. The reference level `1`, corresponds to placebo group, and `2` corresponds to drug group. So drug group are more likely to have high self-assessment scores than placebo group patients. 
+We see that the coefficient for trt is 1.86, similar to the one for baseline. The reference level `1`, corresponds to placebo group, and `2` corresponds to drug group. So drug group patients are more likely to have high self-assessment scores than placebo group patients. 
 
-Finally, we see that the coefficient for sex is 0.76. The reference level, `1`, corresponds to female, and `2` corresponds to male. So male patients are more likely to have high self-assessment scores than female patients. But the effect of sex is not as dramatic as the effect of the baseline score or trt.
+Finally, we see that the coefficient for sex is 0.76. The reference level, `1`, corresponds to female, and `2` corresponds to male. So male patients are more likely to have high self-assessment scores than female patients. 
 
-Overall, the effect sizes suggest that baseline and trt are relevant, as both are significantly different of 0, but that sex is not particularly important. 
+Overall, as shown in the summary, the effect sizes suggest that baseline and trt are relevant, as both are significantly different of 0, whereas sex does not appear to be particularly important.
 
-## `mu` parameters
+## Intercepts ($\alpha_k$)
 
-The `mu` estimates in the output are, roughly speaking, the intercept terms for each level of the response. This is why there is no intercept term amongst the covariate coefficients: it is already incorporated into the `mu` parameters. We do not need to interpret these estimates.
+The `alpha` estimates in the output are, roughly speaking, the intercept terms for each level of the response. This is why there is no intercept term amongst the covariate coefficients, it is already incorporated into the `alpha` parameters. The intercept parameters determine the proportion of individuals per response category at $\boldsymbol{x}=0$. We do not need to interpret these estimates. 
 
-## `phi` parameters
+The intercepts ($\alpha_k$) can be accessed from the model object using:
+```{r}
+fit$alpha
+```
 
-The `phi` estimates in the output are the score parameters that capture the discriminant ability of the covariates across the response categories. For each group, the first and last values are fixed at 0 and 1, respectively.
 
-For the first group, composed of the covariates baseline and sex, the estimated scores are $\widehat{\phi}_2^1 = 0.01$, $\widehat{\phi}_3^1 = 0.26$, and $\widehat{\phi}_4^1 = 0.67$. Since $\widehat{\phi}_2^1$ is very close to $\phi_1^1 = 0$, this suggests that baseline and sex cannot distinguish between levels 1 and 2 of the response. However, as the subsequent $\phi_k^1$ values increase progressively, it indicates that these covariates can distinguish better between higher response levels. Let us plot the distribution of baseline values across the response categories:
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+## Score parameters ($\phi_k$)
+
+The `phi` estimates in the output correspond to the score parameters. Each set of score paramters captures the discriminant ability of the covariates in a given group across the response categories. For each group, the first and last values are fixed at 0 and 1, respectively. 
+
+We can access the score parameters ($\phi_k$) from the model object using:
+
+```{r}
+fit$phi
+```
+Each column corresponds to a full set of score parameters for one covariate group.
+
+
+For the first group, composed of the covariates baseline and sex, the estimated scores are $\widehat{\phi}_2^1 = 0.01$, $\widehat{\phi}_3^1 = 0.26$, and $\widehat{\phi}_4^1 = 0.67$. Since $\widehat{\phi}_2^1$ is very close to the fixed value $\phi_1^1 = 0$, this suggests that baseline and sex have limited discrimination between levels 1 (very poor) and 2 (poor) of the response. However, as the subsequent $\phi_k^1$ values increase progressively, it indicates that these covariates provide better discrimination among higher response levels.
+
+This pattern can be visualised by examining the distribution of baseline values across the response categories:
+```{r, warning=FALSE, message=FALSE, fig.width = 5, fig.height=2.5}
 library(dplyr)
 library(ggplot2)
+labels.y <- c(
+  "1" = "1 (very poor)",
+  "2" = "2 (poor)",
+  "3" = "3 (fair)",
+  "4" = "4 (good)",
+  "5" = "5 (very good)"
+)
+
+
 arthritis %>%
   filter(complete.cases(.)) %>%
   group_by(y, baseline) %>%
   summarise(count = n(), .groups = "drop") %>%
   group_by(y) %>%
-  mutate(proportion = count / sum(count)) %>% 
-  ggplot(aes(x = y, y = proportion, fill = baseline)) +
+  mutate(proportion = count / sum(count)) %>%
+  ggplot(aes(x = factor(y), y = proportion, fill = baseline)) +
   geom_bar(stat = "identity") +
+  scale_x_discrete(labels = labels.y) +
+  scale_fill_continuous(
+    breaks = as.numeric(names(labels.y)),
+    labels = labels.y,
+    name = "Baseline") +
   ylab("Proportion") +
-  theme_minimal()
+  xlab("Response category") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0))
 ```
-From the plot, we can observe that the baseline values are similarly distributed across categories 1 and 2, but show increasingly different distributions across categories 3, 4, and 5. These interpretations are further supported by the statistical tests for the score parameters. The test comparing $\phi_1^1$ and $\phi_2^1$ is not significant (p-value = 0.967), confirming that baseline and sex cannot distinguish between the first two response levels. In contrast, the tests for higher levels show significant differences (p-values < 0.05), indicating discriminative ability across the subsequent categories.
 
-For the second group, composed solely of the covariate trt, the estimated scores are $\widehat{\phi}_2^2 = 0.39$, and $\widehat{\phi}_3^2 = \widehat{\phi}_4^2 = 1$. In this case, the treatment covariate is able to discriminate between the lower response levels but shows no discrimination between levels 3, 4, and 5, as $\widehat{\phi}_3^2$, $\widehat{\phi}_4^2$, and $\phi_5^2$ are all equal to 1. Similar as in group 1, significant differences are found between $\phi_1^2$ and $\phi_2^2$ and between $\phi_2^2$ and $\phi_3^2$ (p-value < 0.01), while no significant differences are observed between $\phi^2_3$, $\phi_4^2$, and $\phi_5^2$ (p = 1), confirming the lack of discrimination among the highest response levels for the treatment covariate.
+From the plot, we can observe that the baseline values are similarly distributed across categories 1 (very poor) and 2 (poor), but show increasingly distinct patterns for categories 3 (fair), 4 (good), and 5 (very good). These interpretations are further supported by the statistical tests for the score parameters. The test comparing $\phi_1^1$ and $\phi_2^1$ is not significant (p-value = 0.967), confirming that baseline and sex have limited discriminatio between the first two response levels. In contrast, the tests for higher levels show significant differences (p-values < 0.05), indicating discriminant ability among higher response categories.
+
+For the second group, composed solely of the covariate trt, the estimated scores are $\widehat{\phi}_2^2 = 0.39$, and $\widehat{\phi}_3^2 = \widehat{\phi}_4^2 = 1.00$. In this case, the treatment covariate is able to discriminate between the lower response levels but shows limited discrimination between levels 3 (fair), 4 (good), and 5 (very good), as $\widehat{\phi}_3^2$, $\widehat{\phi}_4^2$, and $\phi_5^2$ are all equal to 1. Similar as in group 1, significant differences are found between $\phi_1^2$ and $\phi_2^2$ and between $\phi_2^2$ and $\phi_3^2$ (p-value < 0.01), while no significant differences are observed between $\phi^2_3$, $\phi_4^2$, and $\phi_5^2$ (p-value = 1), confirming the limited discrimination among the highest response levels for the treatment covariate.
+
+Note that, given the estimated score parameters in the second group, we could consider refitting the POSM by fixing $\phi_3^2 = \phi_4^2 = 1$, which would simplify the model without compromising interpretability and may improve parameter stability and estimation efficiency. Similarly, fixing $\phi_2^1 = 0$ in group 1 could be considered for the same reason. If the p-value for a comparison between a pair of score parameters is above 0.05, this does not necessarily imply that the corresponding score parameters must be fixed to the same value. Rather, it suggests that fixing the score parameters for those levels to the same value would not compromise the model or its interpretation, as the covariates in that particular group exhibit limited discriminant ability for those specific response categories, and would continuing to do so after being fixed to the same value. 
+
+# Odds ratios
+
+In the Partial Ordered Stereotype Model, a single odds ratio cannot be computed for each covariate coefficient. This is because the model is purposely constructed so that the covariates can have slightly different effects on the different levels of the response variable. The overall effect of a covariate is determined jointly by its coefficient and the corresponding score parameters $\phi_k$ for each response level $k$.
+
+As a result, there is no single number, such as a traditional odds ratio, that captures the overall impact of a covariate. Instead, we obtain a different odds ratio for each comparison between a response category and the baseline category, resulting in $q - 1$ odds ratios, where $q$ is the number of response categories. These odds ratios are computed as the exponential of the product of the covariate coefficient and the corresponding score parameter, that is, $\exp(\beta \cdot \phi_k)$.
+
+For the `baseline` covariate: 
+```{r}
+round(exp(fit$beta[1]*fit$phi[,1]), 3)
+```
+For the `trt` covaraite: 
+```{r}
+round(exp(fit$beta[2]*fit$phi[,2]), 3)
+```
+And for the `sex` covariate: 
+```{r}
+round(exp(fit$beta[3]*fit$phi[,1]), 3)
+```
+Note that we multiply each covariate coefficient by the corresponding set of score parameters (the first set for the baseline and sex covariates, and the second set for the trt covariate).
+
+For example, the interpretation of the odds ratios for the baseline covariate is as follows. The first odds ratio (1.011) indicates that a one-unit increase in baseline leads to only a very small change in the odds of being in category 2 versus category 1. For category 3 versus 1, the odds increase by approximately 64.5%. The odds of being in category 4 rather than category 1 are about 3.57 times greater, and for category 5 versus 1, about 6.68 times greater, per unit increase in baseline.
 
 
+# Model Selection
+
+The data set includes four potential covariates related to ´y´: sex (coded as `1` for female and `2` for male), age (recorded at baseline), trt (treatment group variable, coded as `1` for the placebo group and `2` for the drug group), and baseline (self-assessment score of rheumatoid arthritis at baseline). 
+
+To identify the optimal model, defined as the candidate model with the lowest AIC value, we apply three selection strategies: one based on the forward stepwise algorithm, another based on the combined forward-backward stepwise algorithm, and a large-scale systematic search. These methods will select the relevant covariates, number of groups of covariates, and grouping the covariates accordingly.
+
+## Forward Stepwise 
+
+A model selection strategy for the POSM that builds the model incrementally using a forward stepwise approach. At each step, the method selects both the covariate and its group assignment that achieve the greatest improvement in the Akaike Information Criterion (AIC). Therefore, this algorithm not only selects the relevant predictors, but also determines the appropriate number of covariate groups and assigns predictors to groups accordingly.
+
+We run the forward stepwise method:
+
+```{r}
+fs.arthritis <- forward.stepwise.POSM(Outcome = "y",
+                                      Covariates = c("sex", "age", "trt",
+                                                     "baseline"),
+                                      data = arthritis)
+fs.arthritis
+```
+The output includes the selected model, the grouping and AIC (in parentheses), and the time spent to run the algorithm and reach the optimal model, in seconds.
+
+By default, this method uses the AIC as the stopping rule (`IC = "AIC"`). Additionally, it place all dummy variables generated from a categorical variable into the same group (`split_categorical = FALSE`). Finally, it does not show every intermediate step (`keep = FALSE`). 
+
+If we instead use the BIC as the information criterion, the result changes:
+```{r}
+forward.stepwise.POSM(Outcome = "y",
+                      Covariates = c("sex", "age", "trt", "baseline"),
+                      data = arthritis, IC = "BIC")
+```
+
+If we would like to see all the steps taken during the model selection process:
+```{r}
+forward.stepwise.POSM(Outcome = "y",
+                      Covariates = c("sex", "age", "trt", "baseline"),
+                      data = arthritis, keep = TRUE)
+```
+Note that three steps were needed to find the optimal model. 
+
+## Forward-Backward Stepwise 
+
+The forward-backward stepwise method provides a more flexible approach than forward selection, allowing both forward additions and backward eliminations of covariates during the model building process.
+
+We run the forward-backward stepwise method:
+
+```{r}
+fbs.arthritis <- forward.backward.stepwise.POSM(Outcome = "y",
+                                                Covariates = c("sex", "age",
+                                                               "trt",
+                                                               "baseline"),
+                                                data = arthritis)
+fbs.arthritis
+```
+As with the `forward.stepwise.POSM()` function, this method uses the AIC as the stopping rule. Note that the option to use the BIC is not yet implemented in this function. Like before, all dummy variables generated from a categorical variable are placed into the same group (`split_categorical = FALSE`), and intermediate steps are not shown by default (`keep = FALSE`). Additionally, this function includes a `maxSteps` argument to define the maximum number of steps allowed during the selection process, with a default value of 100.
+
+
+## Large-Scale Systematic Search
+
+This model selection method performs a large-scale systematic search of the overall best model. It fits all possible models for each number of possible covariates in each step until no further improvement in AIC is observed.
+
+We run the large-scale systematic search method:
+```{r}
+lsss.arthritis <- large.scale.systematic.search.POSM(Outcome = "y",
+                                                   Covariates = c("sex", "age", 
+                                                                  "trt", "baseline"),
+                                                   data = arthritis)
+lsss.arthritis
+```
+As the `forward.backward.stepwise.POSM()` function, this method uses the AIC as the stopping rule and the option to use the BIC is not yet implemented. Like before, all dummy variables generated from a categorical variable are placed into the same group (`split_categorical = FALSE`), and intermediate steps are not shown by default (`keep = FALSE`). 
+
+Note that all methods arrived at the same optimal model. The FBS method required slightly more time than the FS method because, in addition to fitting models that add covariates, it also fits models that remove covariates. The large-scale systematic search method takes significantly more time to run, as it fits all candidate models with a given number of covariates at each step. The number of candidate models increases sharply as the number of covariates grows. For this reason, computational time should be carefully considered when the number of potential covariates is large.
+
+
+# References
+
+Touloumis, A. (2015). R package multgee: a generalized estimating equations solver for multinomial responses. Journal of Statistical Software, 64, 1-14.

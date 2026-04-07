@@ -436,7 +436,7 @@ posm.fit <- function(x, y, newgrouping, wt, start, offset, ...)
   ind_phi_k <- seq_len(num_phi_k)
 
   ## Run optim, and extract the results
-  res <- optim(start, fmin, method="L-BFGS-B", ...)
+  res <- optim(start, fmin, method="BFGS", ...)
   beta <- res$par[ind_beta]
   alpha <- res$par[num_beta + ind_mu_k]
   u <- matrix(res$par[num_beta + num_mu_k + ind_phi_totalk], ncol = H, nrow = num_phi_k)

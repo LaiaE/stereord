@@ -10,7 +10,7 @@ forward.stepwise.POSM(
   Covariates,
   data,
   IC = "AIC",
-  NominalVarSameGroup = FALSE,
+  split_categorical = FALSE,
   keep = FALSE
 )
 }
@@ -26,8 +26,9 @@ variables used in the model selection procedure.}
 \item{IC}{Information criterion to be used as the stopping rule. Must be
 either 'AIC' or 'BIC'.}
 
-\item{NominalVarSameGroup}{logical for whether different levels of a categorical
-variable should be forced into the same group.}
+\item{split_categorical}{logical for whether different levels of a categorical
+variable should be forced into the same group. If TRUE, dummy variables derived
+from the same categorical covariate are treated as a independent covariates.}
 
 \item{keep}{logical for whether to keep a record of all selection steps.}
 }
