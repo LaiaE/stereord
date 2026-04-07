@@ -9,7 +9,7 @@ forward.backward.stepwise.POSM(
   Outcome,
   Covariates,
   data,
-  NominalVarSameGroup = FALSE,
+  split_categorical = FALSE,
   keep = FALSE,
   maxSteps = 100
 )
@@ -23,8 +23,9 @@ covariates.}
 \item{data}{a data frame, list, or environment in which to evaluate the
 variables used in the model selection procedure.}
 
-\item{NominalVarSameGroup}{logical for whether different levels of a categorical
-variable should be forced into the same group.}
+\item{split_categorical}{logical for whether different levels of a categorical
+variable should be forced into the same group. If TRUE, dummy variables derived
+from the same categorical covariate are treated as a independent covariates.}
 
 \item{keep}{logical for whether to keep a record of all selection steps.}
 
